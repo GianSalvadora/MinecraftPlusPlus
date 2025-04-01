@@ -5,7 +5,7 @@ class Player {
 private:
     float speed = 5.f;
     float cameraPitch = 0.0f;
-    float cameraYaw = -90.0f; // Start looking along z-axis
+    float cameraYaw = -90.0f;
 public:
     Vector3 position;
     float height;
@@ -96,7 +96,6 @@ int main() {
     InitWindow(screenWidth, screenHeight, "MinecraftPlusPlus");
     SetTargetFPS(60);
 
-    // Initialize camera
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 0.0f, 2.0f, 0.0f };
     camera.target = (Vector3){ 0.0f, 2.0f, 1032.0f };
@@ -104,10 +103,7 @@ int main() {
     camera.fovy = 80.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    // Initialize player
     Player player = Player{ (Vector3){ 0.0f, 0.0f, 0.0f }, 2.0f };
-
-    // Hide cursor for first-person view
     DisableCursor();
 
     while (!WindowShouldClose()) {
@@ -118,16 +114,9 @@ int main() {
         BeginMode3D(camera);
 
         DrawCube((Vector3){0, 0, 10}, 1, 1, 1, RAYWHITE);
-
-        // Draw floor for reference
         DrawPlane((Vector3){0, -0.5f, 0}, (Vector2){50, 50}, DARKGRAY);
 
         EndMode3D();
-
-        // Draw instructions
-        DrawText("W/S - Move forward/backward", 10, 40, 20, BLACK);
-        DrawText("A/D - Strafe left/right", 10, 70, 20, BLACK);
-        DrawText("Mouse - Look around", 10, 100, 20, BLACK);
 
         EndDrawing();
     }

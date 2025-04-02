@@ -6,5 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories("C:/raylib/raylib/src")
 
-add_executable(my_raylib_project main.cpp)
+add_executable(my_raylib_project main.cpp
+        Grid.h)
 target_link_libraries(my_raylib_project "C:/raylib/raylib/src/libraylib.a" -lopengl32 -lgdi32 -lwinmm)

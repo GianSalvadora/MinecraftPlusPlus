@@ -1,13 +1,25 @@
 #include <raylib.h>
 #include <math.h>
+#include <iostream>
+
+#include "Grid.h"
+
+void RenderChunk(Vector2 rootPosition) {
+    for (int x = 0; x < 16; x++) {
+        for (int y = 0; y < 16; y++) {
+            DrawCube(Vector3{rootPosition.x + x * 1 + 0.5f, 1, rootPosition.y + y * 1 + 0.5f}, 1, 1, 1, GREEN);
+        }
+    }
+}
 
 class Player {
 private:
-    float speed = 5.f;
+    float speed = 50.f;
     float cameraPitch = 0.0f;
     float cameraYaw = -90.0f;
+    Vector3 offset = {0, -2, 0};
 public:
-    Vector3 position;
+    Vector3 position = {10, 32, 10};
     float height;
 
     Player(Vector3 pos, float h) {
@@ -67,6 +79,12 @@ public:
             moveVec.z -= right.z;
         }
 
+        if (IsKeyDown(KEY_SPACE)) {
+            moveVec.y += 1;
+        }
+        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+            moveVec.y -= 1;
+        }
         // Normalize movement vector
         float moveLength = sqrtf(moveVec.x * moveVec.x + moveVec.z * moveVec.z);
         if (moveLength > 0.0f) {
@@ -77,10 +95,11 @@ public:
         // Apply movement
         float frameSpeed = speed * GetFrameTime();
         position.x += moveVec.x * frameSpeed;
+        position.y += moveVec.y * frameSpeed;
         position.z += moveVec.z * frameSpeed;
 
         // Update camera position and target
-        camera.position = (Vector3){ position.x, position.y + height, position.z };
+        camera.position = (Vector3){ position.x + offset.x, position.y + height + offset.y, position.z + offset.z };
         camera.target = (Vector3){
             camera.position.x + direction.x,
             camera.position.y + direction.y,
@@ -98,26 +117,28 @@ int main() {
 
     Camera3D camera = { 0 };
     camera.position = (Vector3){ 0.0f, 2.0f, 0.0f };
-    camera.target = (Vector3){ 0.0f, 2.0f, 1032.0f };
+    camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };
     camera.up = (Vector3){ 0.f, 1.0f, 0.0f };
     camera.fovy = 80.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    Player player = Player{ (Vector3){ 0.0f, 0.0f, 0.0f }, 2.0f };
+    Player player = Player{ (Vector3){ 10.0f, 35.0f, 0.0f }, 2.0f };
     DisableCursor();
 
     while (!WindowShouldClose()) {
         player.UpdatePlayer(camera);
-
         BeginDrawing();
         ClearBackground(SKYBLUE);
         BeginMode3D(camera);
 
-        DrawCube((Vector3){0, 0, 10}, 1, 1, 1, RAYWHITE);
-        DrawPlane((Vector3){0, -0.5f, 0}, (Vector2){50, 50}, DARKGRAY);
+        Grid grid(Vector2{10, 10}, 16);
+        grid.DrawGrid();
+        Vector2 cellPosition = grid.GetCellPosition(grid.GetGridPosition(Vector2{player.position.x, player.position.z}));
+        RenderChunk(cellPosition);
 
         EndMode3D();
 
+        std::cout << GetFPS() << std::endl;
         EndDrawing();
     }
 

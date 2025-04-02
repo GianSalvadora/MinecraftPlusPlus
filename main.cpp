@@ -119,8 +119,10 @@ int main() {
     camera.position = (Vector3){ 0.0f, 2.0f, 0.0f };
     camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };
     camera.up = (Vector3){ 0.f, 1.0f, 0.0f };
-    camera.fovy = 80.0f;
+    camera.fovy = 120.0f;
     camera.projection = CAMERA_PERSPECTIVE;
+
+    constexpr int renderDistance = 4;
 
     Player player = Player{ (Vector3){ 10.0f, 35.0f, 0.0f }, 2.0f };
     DisableCursor();
@@ -129,12 +131,28 @@ int main() {
         player.UpdatePlayer(camera);
         BeginDrawing();
         ClearBackground(SKYBLUE);
+
+
+
         BeginMode3D(camera);
 
-        Grid grid(Vector2{10, 10}, 16);
+        Grid grid(Vector2{10, 10}, 16, BLACK);
+        Grid miniGrid({160, 160}, 1, GRAY);
+        miniGrid.DrawGrid();
         grid.DrawGrid();
         Vector2 cellPosition = grid.GetCellPosition(grid.GetGridPosition(Vector2{player.position.x, player.position.z}));
-        RenderChunk(cellPosition);
+
+        DrawCircle3D(Vector3{player.position.x, 1, player.position.z}, renderDistance, Vector3{90, 0, 0}, 90, BLACK);
+        for (int x = -renderDistance; x <= renderDistance; ++x) {
+            for (int y = -renderDistance; y <= renderDistance; ++y) {
+                Vector2 chunkPosition = { grid.GetGridPosition(cellPosition).x + x, grid.GetGridPosition(cellPosition).y + y };
+                float dist = sqrtf(x * x + y * y);
+                if (dist <= renderDistance) {
+                    Vector2 cellPosition = grid.GetCellPosition(chunkPosition);
+                    RenderChunk(cellPosition);
+                }
+            }
+        }
 
         EndMode3D();
 

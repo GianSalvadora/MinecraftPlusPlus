@@ -5,13 +5,14 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 #include <raylib.h>
+#include <math.h>
 
 class Player {
 private:
     float speed = 50.f;
     float cameraPitch = 0.0f;
     float cameraYaw = -90.0f;
-    Vector3 offset = {0, -2, 0};
+    Vector3 offset = {0, 2, 0};
 
 public:
     Vector3 position = {10, 32, 10};

@@ -11,7 +11,25 @@
 #include "Grid.h"
 #include "Vector2Int.h"
 #include <vector>
+#include <cstdint>
+#include "FastNoiseLite.h"
 
+float GetBlock(float x, float y, float z) {
+    const int base = 10;
+    const float strength = 25;
+    FastNoiseLite noise;
+    noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    const float noiseValue = noise.GetNoise(x * 0.25f, z * 0.25f);
+    const int final = base + (int)(noiseValue * strength);
+    // std::cout << noiseValue << std::endl;
+    if (y < final) {
+        return 1;
+    }
+    return 0;
+
+
+
+}
 struct VectorHash {
     size_t operator()(const Vector2Int &v) const {
         size_t xHash = std::hash<float>()(v.x);
@@ -27,6 +45,9 @@ struct VectorEqual {
 };
 
 class Chunk {
+private:
+    uint8_t chunkdata[16][64][16] = { 0 };
+
 public:
     Vector3 position;
 
@@ -47,8 +68,11 @@ public:
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
-                    DrawCube(Vector3{position.x + x * 1 + 0.5f, position.y + y * 1 + 0.5f, position.z + z * 1 + 0.5f},
-                             1, 1, 1, GREEN);
+                    chunkdata[x][y][z] = GetBlock(position.x + x, position.y + y, position.z + z);
+                    if (chunkdata[x][y][z] != 0) {
+                        DrawCube(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, BROWN);
+                        DrawCubeWires(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, DARKGRAY);
+                    }
                 }
             }
         }
@@ -98,11 +122,6 @@ public:
             int minY = centerChunkGridPosition.y - renderDistance;
             int maxY = centerChunkGridPosition.y + renderDistance;
 
-            std::cout << minX << std::endl;
-            std::cout << minY << std::endl;
-            std::cout << maxX << std::endl;
-            std::cout << maxY << std::endl;
-
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     Vector2Int gridPos{x, y};
@@ -140,7 +159,6 @@ public:
 
 
     void GenerateChunk() {
-        std::cout << "Generating " << activeChunks.size() << " Chunks" << std::endl;
         for (auto &valuePair: activeChunks) {
             valuePair.second.DrawChunk();
         }

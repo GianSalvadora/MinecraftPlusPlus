@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include "Vector2Int.h"
+#include "math.h"
 
 
 class Grid {

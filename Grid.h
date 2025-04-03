@@ -2,7 +2,7 @@
 #define GRID_H
 
 #include "raylib.h"
-
+#include "Vector2Int.h"
 
 
 class Grid {
@@ -17,11 +17,11 @@ public:
         color = _color;
     }
 
-    Vector2 GetGridPosition(Vector2 worldPosition) {
-        return Vector2{floor(worldPosition.x/cellSize), floor(worldPosition.y/cellSize)};
+    Vector2Int GetGridPosition(Vector2 worldPosition) {
+        return Vector2Int{(int)floor(worldPosition.x/cellSize), (int)floor(worldPosition.y/cellSize)};
     }
 
-    Vector2 GetCellPosition(Vector2 cellPosition) {
+    Vector2 GetCellPosition(Vector2Int cellPosition) {
         return Vector2{round(cellPosition.x * cellSize) , round(cellPosition.y * cellSize)};
     }
 

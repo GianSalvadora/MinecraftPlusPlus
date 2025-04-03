@@ -21,7 +21,7 @@ int main() {
     camera.fovy = 120.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    constexpr int renderDistance = 4;
+    int renderDistance = 1;
 
     Player player = Player{(Vector3){10.0f, 35.0f, 0.0f}, 2.0f};
     DisableCursor();
@@ -38,14 +38,12 @@ int main() {
 
 
         grid.DrawGrid();
-
-        Vector2 cellPosition = grid.
-        GetCellPosition(grid.GetGridPosition(Vector2{player.position.x, player.position.z}));
-        Vector2 worldPosition = grid.GetGridPosition(cellPosition);
         DrawCircle3D(Vector3{player.position.x, 1, player.position.z}, renderDistance, Vector3{90, 0, 0}, 90, BLACK);
 
 
-        if (chunkManager.IsInNewChunk(player)) {}
+        if (chunkManager.IsInNewChunk(player)) {
+            chunkManager.FormActiveChunks(renderDistance);
+        }
 
         chunkManager.GenerateChunk();
 

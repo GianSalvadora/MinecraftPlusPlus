@@ -9,5 +9,6 @@ include_directories("C:/raylib/raylib/src")
 add_executable(my_raylib_project main.cpp
         Grid.h
         ChunkManager.h
-        Player.h)
+        Player.h
+        Vector2Int.h)
 target_link_libraries(my_raylib_project "C:/raylib/raylib/src/libraylib.a" -lopengl32 -lgdi32 -lwinmm)

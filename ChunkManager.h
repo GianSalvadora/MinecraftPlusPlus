@@ -98,19 +98,16 @@ public:
             int minY = centerChunkGridPosition.y - renderDistance;
             int maxY = centerChunkGridPosition.y + renderDistance;
 
-            // log the min and maxes
             std::cout << minX << std::endl;
             std::cout << minY << std::endl;
             std::cout << maxX << std::endl;
             std::cout << maxY << std::endl;
 
-            // Add new Chunks to Render
-            for (int x = minX; x <= maxX; x++) {  // Include maxX in range
-                for (int y = minY; y <= maxY; y++) {  // Include maxY in range
+            for (int x = minX; x <= maxX; x++) {
+                for (int y = minY; y <= maxY; y++) {
                     Vector2Int gridPos{x, y};
                     Vector3 newCellPos{grid->GetCellPosition(gridPos).x, 1, grid->GetCellPosition(gridPos).y};
 
-                    // Add chunk if it doesn't already exist in activeChunks
                     if (activeChunks.find({x, y}) == activeChunks.end()) {
                         activeChunks.insert({{x, y}, Chunk{newCellPos}});
                     }
@@ -119,7 +116,6 @@ public:
                 }
             }
 
-            // Remove old chunks not included in the new render area
             std::vector<Vector2Int> chunksToRemove;
             for (const auto &p : activeChunks) {
                 std::vector<Vector2Int>::iterator i = chunkPositions.begin();
@@ -135,7 +131,6 @@ public:
                 }
             }
 
-            // Remove chunks outside of render distance
             for (const auto &p : chunksToRemove) {
                 activeChunks.erase(p);
             }

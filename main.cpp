@@ -17,7 +17,7 @@ int main() {
     camera.fovy = 70.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    int renderDistance = 2;
+    int renderDistance = 1;
     Player player = Player{(Vector3){10.0f, 35.0f, 0.0f}, 2.0f};
     DisableCursor();
     Grid grid(Vector2{10, 10}, 16, BLACK);
@@ -45,6 +45,3 @@ int main() {
     return 0;
 }
 
-void Test() {
-    rlBegin(1);
-}

@@ -9,10 +9,11 @@
 
 class Player {
 private:
-    float speed = 50.f;
+    float speed = 25.f;
     float cameraPitch = 0.0f;
     float cameraYaw = -90.0f;
     Vector3 offset = {0, 2, 0};
+    int camMode = 0;
 
 public:
     Vector3 position = {10, 32, 10};
@@ -88,19 +89,35 @@ public:
             moveVec.z /= moveLength;
         }
 
-        // Apply movement
-        float frameSpeed = speed * GetFrameTime();
-        position.x += moveVec.x * frameSpeed;
-        position.y += moveVec.y * frameSpeed;
-        position.z += moveVec.z * frameSpeed;
+        if (IsKeyPressed(KEY_F)) {
+            camMode == 1 ? camMode = 0 : camMode = 1;
+        }
 
-        // Update camera position and target
-        camera.position = (Vector3){position.x + offset.x, position.y + height + offset.y, position.z + offset.z};
-        camera.target = (Vector3){
-            camera.position.x + direction.x,
-            camera.position.y + direction.y,
-            camera.position.z + direction.z
-        };
+        float frameSpeed = speed * GetFrameTime();
+        if (camMode == 0) {
+            // Apply movement
+            position.x += moveVec.x * frameSpeed;
+            position.y += moveVec.y * frameSpeed;
+            position.z += moveVec.z * frameSpeed;
+
+            // Update camera position and target
+            camera.position = (Vector3){position.x + offset.x, position.y + height + offset.y, position.z + offset.z};
+            camera.target = (Vector3){
+                camera.position.x + direction.x,
+                camera.position.y + direction.y,
+                camera.position.z + direction.z
+            };
+        } else {
+            camera.position.x += moveVec.x * frameSpeed;
+            camera.position.y += moveVec.y * frameSpeed;
+            camera.position.z += moveVec.z * frameSpeed;
+
+            camera.target = (Vector3){
+                camera.position.x + direction.x,
+                camera.position.y + direction.y,
+                camera.position.z + direction.z
+            };
+        }
     }
 };
 

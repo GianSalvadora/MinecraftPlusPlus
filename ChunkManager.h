@@ -15,17 +15,33 @@
 #include "FastNoiseLite.h"
 
 float GetBlock(float x, float y, float z) {
-    const int base = 10;
-    const float strength = 25;
+    const int base = 10; // Base height of the terrain
+    const float strength = 15; // Overall terrain height variation
+    const int octaves = 4; // Number of noise layers
+    const float lacunarity = 2.0f; // Frequency multiplier per octave
+    const float persistence = 0.5f; // Amplitude multiplier per octave
+
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    const float noiseValue = noise.GetNoise(x * 0.25f, z * 0.25f);
-    const int final = base + (int) (noiseValue * strength);
-    if (y < final) {
-        return 1;
+
+    float noiseValue = 0.0f;
+    float frequency = 0.3f;
+    float amplitude = 1.0f;
+    float totalAmplitude = 0.0f;
+
+    for (int i = 0; i < octaves; i++) {
+        noiseValue += noise.GetNoise(x * frequency, z * frequency) * amplitude;
+        totalAmplitude += amplitude;
+        frequency *= lacunarity;
+        amplitude *= persistence;
     }
-    return 0;
+
+    noiseValue /= totalAmplitude; // Normalize the noise value
+    int finalHeight = base + static_cast<int>(noiseValue * strength);
+
+    return (y < finalHeight) ? 1 : 0;
 }
+
 
 struct VectorHash {
     size_t operator()(const Vector2Int &v) const {
@@ -43,7 +59,7 @@ struct VectorEqual {
 
 class Chunk {
 private:
-    uint8_t chunkdata[16][64][16] = {0};
+    uint8_t chunkData[16][64][16] = {0};
 
 public:
     Vector3 position;
@@ -63,25 +79,87 @@ public:
                round(position.z);
     }
 
-    void DrawChunk() {
-        for (int x = 0; x < 16; x++) {
-            for (int y = 0; y < 16; y++) {
-                for (int z = 0; z < 16; z++) {
+    bool IsFaceVisible(int x, int y, int z, int face) {
+        switch (face) {
+            case 0: return (x == 0) || (chunkData[x - 1][y][z] == 0); // -x face
+            case 1: return (x == 15) || (chunkData[x + 1][y][z] == 0); // +x face
+            case 2: return (y == 63) || (chunkData[x][y + 1][z] == 0); // +y face
+            case 3: return (y == 0) || (chunkData[x][y - 1][z] == 0); // -y face
+            case 4: return (z == 15) || (chunkData[x][y][z + 1] == 0); // +z face
+            case 5: return (z == 0) || (chunkData[x][y][z - 1] == 0); // -z face
+            default: return false; // Invalid face
+        }
+    }
 
-                    if (chunkdata[x][y][z] != 0 && IsVisible(x, y, z)) {
-                        // DrawCube(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, BROWN);
-                        // DrawCubeWires(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, DARKGRAY);
+    void DrawChunk() {
+        const int height = 1;
+        const int width = 1;
+        const int length = 1;
+
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 64; y++) {
+                for (int z = 0; z < 16; z++) {
+                    if (chunkData[x][y][z] != 0 && IsVisible(x, y, z)) {
+                        float halfWidth = width / 2.0f;
+                        float halfHeight = height / 2.0f;
+                        float halfLength = length / 2.0f;
+
+                        float cx = position.x + x + halfWidth;
+                        float cy = position.y + y + halfHeight;
+                        float cz = position.z + z + halfLength;
+
+                        Vector3 vertices[8] = {
+                            Vector3{cx - halfWidth, cy - halfHeight, cz - halfLength}, //LLB 0
+                            Vector3{cx + halfWidth, cy - halfHeight, cz - halfLength}, //RLB 1
+                            Vector3{cx - halfWidth, cy + halfHeight, cz - halfLength}, //LTB 2
+                            Vector3{cx + halfWidth, cy + halfHeight, cz - halfLength}, //RTB 3
+                            Vector3{cx - halfWidth, cy - halfHeight, cz + halfLength}, //LLF 4
+                            Vector3{cx + halfWidth, cy - halfHeight, cz + halfLength}, //RLF 5
+                            Vector3{cx - halfWidth, cy + halfHeight, cz + halfLength}, //LTF 6
+                            Vector3{cx + halfWidth, cy + halfHeight, cz + halfLength}, //RTF 7
+                        };
+
+                        if (IsFaceVisible(x, y, z, 5)) {
+                            //          LEFT LOW        LEFT TOP        RIGHT LOW        RIGHT TOP
+                            DrawFace(vertices[0], vertices[2], vertices[1], vertices[3], BROWN); // BACK
+                        }
+
+                        if (IsFaceVisible(x, y, z, 4)) {
+                            //          LEFT LOW        RIGHT LOW       LEFT TOP        RIGHT TOP
+                            DrawFace(vertices[4], vertices[5], vertices[6], vertices[7], BROWN); // FRONT
+                        }
+                        if (IsFaceVisible(x, y, z, 0)) {
+                            //          LOW BACK        LOW FRONT       TOP BACK       TOP FRONT
+                            DrawFace(vertices[0], vertices[4], vertices[2], vertices[6], BROWN); // LEFT
+                        }
+                        if (IsFaceVisible(x, y, z, 1)) {
+                            //          LEFT LOW        RIGHT LOW       LEFT TOP        RIGHT TOP
+                            DrawFace(vertices[1], vertices[3], vertices[5], vertices[7], BROWN); // RIGHT
+                        }
+                        if (IsFaceVisible(x, y, z, 3)) {
+                            //          LOW BACK        RIGHT BACK      LEFT FRONT      RIGHT FRONT
+                            DrawFace(vertices[0], vertices[1], vertices[4], vertices[5], DARKBROWN); // BOTTOM
+                        }
+                        if (IsFaceVisible(x, y, z, 2)) {
+                            //          LEFT LOW        LEFT TOP        RIGHT LOW        RIGHT TOP
+                            DrawFace(vertices[2], vertices[6], vertices[3], vertices[7], GREEN); // TOP
+                        }
                     }
                 }
             }
         }
     }
 
+    void DrawFace(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Color color) {
+        DrawTriangle3D(v1, v2, v3, color);
+        DrawTriangle3D(v4, v3, v2, color);
+    }
+
     void InitializeChunkData() {
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
-                    chunkdata[x][y][z] = GetBlock(position.x + x, position.y + y, position.z + z);
+                    chunkData[x][y][z] = GetBlock(position.x + x, position.y + y, position.z + z);
                 }
             }
         }
@@ -89,7 +167,7 @@ public:
 
     bool IsVisible(int x, int y, int z) {
         // If the block is air, it is not visible
-        if (chunkdata[x][y][z] == 0) return false;
+        if (chunkData[x][y][z] == 0) return false;
 
         // Check neighboring blocks
         // If we're on the edge, assume visible for now
@@ -98,16 +176,15 @@ public:
         }
 
         // Check all 6 directions
-        if (chunkdata[x+1][y][z] == 0) return true;
-        if (chunkdata[x-1][y][z] == 0) return true;
-        if (chunkdata[x][y+1][z] == 0) return true;
-        if (chunkdata[x][y-1][z] == 0) return true;
-        if (chunkdata[x][y][z+1] == 0) return true;
-        if (chunkdata[x][y][z-1] == 0) return true;
+        if (chunkData[x + 1][y][z] == 0) return true;
+        if (chunkData[x - 1][y][z] == 0) return true;
+        if (chunkData[x][y + 1][z] == 0) return true;
+        if (chunkData[x][y - 1][z] == 0) return true;
+        if (chunkData[x][y][z + 1] == 0) return true;
+        if (chunkData[x][y][z - 1] == 0) return true;
 
         return false; // Fully surrounded
     }
-
 };
 
 class ChunkManager {

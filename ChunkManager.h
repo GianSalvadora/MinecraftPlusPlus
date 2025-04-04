@@ -20,16 +20,13 @@ float GetBlock(float x, float y, float z) {
     FastNoiseLite noise;
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     const float noiseValue = noise.GetNoise(x * 0.25f, z * 0.25f);
-    const int final = base + (int)(noiseValue * strength);
-    // std::cout << noiseValue << std::endl;
+    const int final = base + (int) (noiseValue * strength);
     if (y < final) {
         return 1;
     }
     return 0;
-
-
-
 }
+
 struct VectorHash {
     size_t operator()(const Vector2Int &v) const {
         size_t xHash = std::hash<float>()(v.x);
@@ -46,17 +43,19 @@ struct VectorEqual {
 
 class Chunk {
 private:
-    uint8_t chunkdata[16][64][16] = { 0 };
+    uint8_t chunkdata[16][64][16] = {0};
 
 public:
     Vector3 position;
 
     Chunk() {
         position = Vector3{0, 0, 0};
+        InitializeChunkData();
     }
 
     Chunk(Vector3 _position) {
         position = _position;
+        InitializeChunkData();
     }
 
     bool operator==(const Chunk &chunk) const {
@@ -68,15 +67,47 @@ public:
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
-                    chunkdata[x][y][z] = GetBlock(position.x + x, position.y + y, position.z + z);
-                    if (chunkdata[x][y][z] != 0) {
-                        DrawCube(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, BROWN);
-                        DrawCubeWires(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, DARKGRAY);
+
+                    if (chunkdata[x][y][z] != 0 && IsVisible(x, y, z)) {
+                        // DrawCube(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, BROWN);
+                        // DrawCubeWires(Vector3{position.x + x, position.y + y, position.z + z}, 1, 1, 1, DARKGRAY);
                     }
                 }
             }
         }
     }
+
+    void InitializeChunkData() {
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
+                    chunkdata[x][y][z] = GetBlock(position.x + x, position.y + y, position.z + z);
+                }
+            }
+        }
+    }
+
+    bool IsVisible(int x, int y, int z) {
+        // If the block is air, it is not visible
+        if (chunkdata[x][y][z] == 0) return false;
+
+        // Check neighboring blocks
+        // If we're on the edge, assume visible for now
+        if (x == 0 || x == 15 || y == 0 || y == 15 || z == 0 || z == 15) {
+            return true;
+        }
+
+        // Check all 6 directions
+        if (chunkdata[x+1][y][z] == 0) return true;
+        if (chunkdata[x-1][y][z] == 0) return true;
+        if (chunkdata[x][y+1][z] == 0) return true;
+        if (chunkdata[x][y-1][z] == 0) return true;
+        if (chunkdata[x][y][z+1] == 0) return true;
+        if (chunkdata[x][y][z-1] == 0) return true;
+
+        return false; // Fully surrounded
+    }
+
 };
 
 class ChunkManager {
@@ -136,7 +167,7 @@ public:
             }
 
             std::vector<Vector2Int> chunksToRemove;
-            for (const auto &p : activeChunks) {
+            for (const auto &p: activeChunks) {
                 std::vector<Vector2Int>::iterator i = chunkPositions.begin();
 
                 for (; i != chunkPositions.end(); i++) {
@@ -150,12 +181,11 @@ public:
                 }
             }
 
-            for (const auto &p : chunksToRemove) {
+            for (const auto &p: chunksToRemove) {
                 activeChunks.erase(p);
             }
         }
     }
-
 
 
     void GenerateChunk() {

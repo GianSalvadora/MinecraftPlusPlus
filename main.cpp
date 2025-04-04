@@ -2,8 +2,9 @@
 #include "Grid.h"
 #include "ChunkManager.h"
 #include "Player.h"
-
+#include "rlgl.h"
 int main() {
+
     constexpr int screenWidth = 1920;
     constexpr int screenHeight = 1080;
 
@@ -16,7 +17,7 @@ int main() {
     camera.fovy = 70.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    int renderDistance = 1;
+    int renderDistance = 2;
     Player player = Player{(Vector3){10.0f, 35.0f, 0.0f}, 2.0f};
     DisableCursor();
     Grid grid(Vector2{10, 10}, 16, BLACK);
@@ -42,4 +43,8 @@ int main() {
 
     CloseWindow();
     return 0;
+}
+
+void Test() {
+    rlBegin(1);
 }

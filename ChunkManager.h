@@ -79,6 +79,7 @@ public:
                round(position.z);
     }
 
+    //Called every frame
     bool IsFaceVisible(int x, int y, int z, int face) {
         switch (face) {
             case 0: return (x == 0) || (chunkData[x - 1][y][z] == 0); // -x face
@@ -91,6 +92,7 @@ public:
         }
     }
 
+    //Called every frame
     void DrawChunk() {
         const int height = 1;
         const int width = 1;
@@ -150,11 +152,13 @@ public:
         }
     }
 
+    //Called every frame
     void DrawFace(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Color color) {
         DrawTriangle3D(v1, v2, v3, color);
         DrawTriangle3D(v4, v3, v2, color);
     }
 
+    //
     void InitializeChunkData() {
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
@@ -200,6 +204,7 @@ public:
         grid = _grid;
     }
 
+    //Called every frame, checks if player is in a different chunk from currentPlayerChunk
     bool IsInNewChunk(Player &player) {
         const Vector2Int playerGridCoordinates = grid->GetGridPosition(Vector2{player.position.x, player.position.z});
         const Vector2 gridCoordinateRoot = grid->GetCellPosition(playerGridCoordinates);
@@ -218,31 +223,38 @@ public:
         return true;
     };
 
+    //Creates new Chunks around the currentPlayerChunk (Currently called every frame that the player is in a new chunk)
     void FormActiveChunks(int renderDistance) {
         if (currentPlayerChunk != nullptr) {
             std::vector<Vector2Int> chunkPositions;
 
+            //Gets the center
             Vector3 centerChunkPos = currentPlayerChunk->position;
             Vector2Int centerChunkGridPosition = grid->GetGridPosition(Vector2{centerChunkPos.x, centerChunkPos.z});
 
+            //Gets the range
             int minX = centerChunkGridPosition.x - renderDistance;
             int maxX = centerChunkGridPosition.x + renderDistance;
             int minY = centerChunkGridPosition.y - renderDistance;
             int maxY = centerChunkGridPosition.y + renderDistance;
 
+            //Creates the chunks around the center centerChunk
             for (int x = minX; x <= maxX; x++) {
                 for (int y = minY; y <= maxY; y++) {
                     Vector2Int gridPos{x, y};
                     Vector3 newCellPos{grid->GetCellPosition(gridPos).x, 1, grid->GetCellPosition(gridPos).y};
 
+                    //Checks if x, y is already in activeChunks
                     if (activeChunks.find({x, y}) == activeChunks.end()) {
                         activeChunks.insert({{x, y}, Chunk{newCellPos}});
                     }
 
+                    //stores the positions
                     chunkPositions.push_back({x, y});
                 }
             }
 
+            //stores the positions that are in the activeChunks and not in the new chunkPositions
             std::vector<Vector2Int> chunksToRemove;
             for (const auto &p: activeChunks) {
                 std::vector<Vector2Int>::iterator i = chunkPositions.begin();
@@ -258,13 +270,14 @@ public:
                 }
             }
 
+            //remove every unnecessary chunks
             for (const auto &p: chunksToRemove) {
                 activeChunks.erase(p);
             }
         }
     }
 
-
+    //Called every frame to draw (OPTIMIZE THIS)
     void GenerateChunk() {
         for (auto &valuePair: activeChunks) {
             valuePair.second.DrawChunk();

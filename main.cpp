@@ -1,8 +1,11 @@
 #include <raylib.h>
-#include "Grid.h"
-#include "ChunkManager.h"
-#include "Player.h"
+#include "core/Grid.h"
+#include "core/ChunkManager.h"
+#include "core/Player.h"
 #include "rlgl.h"
+
+Mesh DrawCustomMesh();
+
 int main() {
 
     constexpr int screenWidth = 1080;
@@ -16,7 +19,7 @@ int main() {
     camera.fovy = 70.0f;
     camera.projection = CAMERA_PERSPECTIVE;
 
-    int renderDistance = 8;
+    int renderDistance = 12;
     Player player = Player{(Vector3){10.0f, 35.0f, 0.0f}, 2.0f};
     DisableCursor();
     Grid grid(Vector2{10, 10}, 16, BLACK);
@@ -29,6 +32,7 @@ int main() {
         ClearBackground(SKYBLUE);
         BeginMode3D(camera);
         grid.DrawGrid();
+
 
         if (chunkManager.IsInNewChunk(player)) {
             chunkManager.FormActiveChunks(renderDistance);
@@ -43,4 +47,3 @@ int main() {
     CloseWindow();
     return 0;
 }
-

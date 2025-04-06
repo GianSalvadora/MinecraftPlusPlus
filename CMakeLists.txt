@@ -7,8 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include_directories("C:/raylib/raylib/src")
 
 add_executable(my_raylib_project main.cpp
-        Grid.h
-        ChunkManager.h
-        Player.h
-        Vector2Int.h)
+        core/Grid.h
+        core/ChunkManager.h
+        core/Player.h
+        core/Vector2Int.h
+        core/Chunk.h)
 target_link_libraries(my_raylib_project "C:/raylib/raylib/src/libraylib.a" -lopengl32 -lgdi32 -lwinmm)
